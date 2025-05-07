@@ -1,0 +1,22 @@
+{
+  "name": "hashfolio",
+  "version": "1.0.0",
+  "description": "Live portfolio tracker for multiple blockchains.",
+  "main": "script.js",
+  "type": "module",
+  "scripts": {
+    "start": "node script.js"
+  },
+  "dependencies": {
+    "alchemy-sdk": "^3.5.0",
+    "axios": "^1.7.9",
+    "body-parser": "^1.20.3",
+    "chart.js": "^4.4.7",
+    "cors": "^2.8.5",
+    "ethers": "^6.13.4",
+    "express": "^4.21.2"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
