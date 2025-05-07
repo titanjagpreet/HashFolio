@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HashFolio - Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.6.2/ethers.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-indigo-900 to-indigo-500 text-white min-h-screen font-['Roboto']">
+  <header class="bg-black/70 p-4 text-2xl font-bold text-center shadow-md">
+    HashFolio - Your Crypto Portfolio
+  </header>
+
+  <main class="p-6 flex flex-col items-center">
+    <div class="flex flex-wrap gap-4 justify-center items-center mb-6">
+      <input type="text" id="walletAddress" placeholder="Enter wallet address" class="px-4 py-2 rounded-lg text-black w-72" />
+      <select id="chainSelector" class="px-4 py-2 rounded-lg text-black">
+        <option value="all">All Chains</option>
+        <option value="ethereum">Ethereum</option>
+        <option value="optimism">Optimism</option>
+        <option value="arbitrum">Arbitrum</option>
+        <option value="base">Base</option>
+      </select>
+      <button onclick="fetchPortfolio()" class="px-6 py-2 bg-green-500 hover:bg-green-600 rounded-lg font-semibold">Fetch Portfolio</button>
+    </div>
+
+    <div class="w-full max-w-5xl overflow-x-auto">
+      <table class="w-full table-auto border-collapse bg-white text-black rounded-xl shadow-xl">
+        <thead>
+          <tr class="bg-green-500 text-white">
+            <th class="p-3 text-left">Asset</th>
+            <th class="p-3 text-left">Chain</th>
+            <th class="p-3 text-left">Balance</th>
+          </tr>
+        </thead>
+        <tbody id="portfolioData" class="divide-y divide-gray-200">
+          <tr>
+            <td colspan="3" class="text-center py-4">Enter a wallet address to see the portfolio.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="chart-container mt-12 w-full max-w-xl">
+      <h2 class="text-xl text-center mb-2">Token Allocation</h2>
+      <canvas id="portfolioChart"></canvas>
+    </div>
+  </main>
+
+  <script>
+    const fetchPortfolio = async () => {
+      const walletAddress = document.getElementById('walletAddress').value;
+      const chainSelector = document.getElementById('chainSelector').value;
+
+      if (!walletAddress) {
+        alert("Please enter a wallet address.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/portfolio?address=${walletAddress}&networkChoice=${chainSelector}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          updatePortfolioView(data);
+          updateChart(data);
+        } else {
+          alert(data.error || 'An error occurred');
+        }
+      } catch (error) {
+        console.error('Error fetching portfolio:', error);
+        alert('Error fetching portfolio data');
+      }
+    };
+
+    const updatePortfolioView = (portfolioData) => {
+      const portfolioTable = document.getElementById('portfolioData');
+      portfolioTable.innerHTML = '';
+
+      if (portfolioData.message) {
+        portfolioTable.innerHTML = `<tr><td colspan="3" class="text-center py-4">${portfolioData.message}</td></tr>`;
+        return;
+      }
+
+      portfolioData.forEach((token) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="p-3">${token.name} (${token.symbol})</td>
+          <td class="p-3">${token.chain}</td>
+          <td class="p-3">${token.balance}</td>
+        `;
+        portfolioTable.appendChild(row);
+      });
+    };
+
+    const updateChart = (portfolioData) => {
+      const labels = portfolioData.map(t => `${t.symbol}`);
+      const values = portfolioData.map(t => parseFloat(t.balance));
+      const colors = [
+        '#6366f1', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#a855f7'
+      ];
+
+      const ctx = document.getElementById('portfolioChart').getContext('2d');
+      if (window.portfolioChart) window.portfolioChart.destroy();
+
+      window.portfolioChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#fff'
+              }
+            }
+          }
+        }
+      });
+    };
+  </script>
+</body>
+
+</html>
+
